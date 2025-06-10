@@ -163,7 +163,7 @@ popup.style.display = "none";
 </script>
 <script>
 document.getElementById('yes-btn').addEventListener('click', () => {
-  fetch('http://localhost:3000/send-email', {
+  fetch('https://portfolio-mailer-wvz4.onrender.com/send-email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -176,14 +176,14 @@ document.getElementById('yes-btn').addEventListener('click', () => {
   })
   .then(data => {
     console.log('✅ Email sent:', data);
+    alert('Email sent successfully!');
   })
   .catch(error => {
     console.error('❌ Error:', error);
     alert('Failed to send email.');
   });
 });
-
-  </script>
+</script>
 </body>
 </html>
 <style>
