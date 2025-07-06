@@ -12,20 +12,34 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Optional CORS settings if you’re serving frontend separately (e.g., from 127.0.0.1:5500)
+// ✅ CORS: Allow multiple trusted origins
+const allowedOrigins = [
+  'https://aris070103.github.io',
+  'https://elopre0701.github.io'
+];
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://aris070103.github.io');
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   next();
 });
 
-// Handle preflight requests
-app.options('/send-email', (req, res) => {
+// ✅ Preflight request handler (for CORS)
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.sendStatus(204);
 });
 
-// Email route
+// ✅ Email sending route
 app.post('/send-email', (req, res) => {
   const { response } = req.body;
 
@@ -37,8 +51,8 @@ app.post('/send-email', (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // Your Gmail address
-      pass: process.env.EMAIL_PASS  // Gmail app password
+      user: process.env.EMAIL_USER, // Gmail address from .env
+      pass: process.env.EMAIL_PASS  // Gmail App Password
     }
   });
 
@@ -49,10 +63,10 @@ app.post('/send-email', (req, res) => {
     text: `She said: ${response}`
   };
 
-  // ✅ Updated block with full error logging
+  // Send the email
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.error('❌ FULL ERROR:', error); // This logs the full error
+      console.error('❌ FULL ERROR:', error);
       return res.status(500).json({
         success: false,
         message: 'Failed to send email.',
@@ -65,7 +79,7 @@ app.post('/send-email', (req, res) => {
   });
 });
 
-// Start the server
+// ✅ Start the server
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
