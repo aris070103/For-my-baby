@@ -1,85 +1,67 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
-const bodyParser = require('body-parser');
+const cors = require('cors');
 const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-// Middleware
-app.use(bodyParser.json());
-app.use(express.static('public'));
-
-// ✅ CORS: Allow multiple trusted origins
+// Allow specific frontend URLs
 const allowedOrigins = [
   'https://aris070103.github.io',
   'https://elopre0701.github.io'
 ];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  next();
-});
-
-// ✅ Preflight request handler (for CORS)
-app.options('*', (req, res) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.sendStatus(204);
-});
-
-// ✅ Email sending route
-app.post('/send-email', (req, res) => {
-  const { response } = req.body;
-
-  if (!response) {
-    return res.status(400).json({ success: false, message: 'Missing response data.' });
-  }
-
-  // Configure the transporter
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER, // Gmail address from .env
-      pass: process.env.EMAIL_PASS  // Gmail App Password
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
-  });
+  }
+}));
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER, // Send to yourself
-    subject: 'Answer',
-    text: `She said: ${response}`
-  };
+// Middleware
+app.use(bodyParser.json());
 
-  // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('❌ FULL ERROR:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send email.',
-        error: error.message || error.toString()
-      });
-    }
+// Email sending route
+app.post('/send-email', async (req, res) => {
+  const { name, email, message } = req.body;
 
-    console.log('✅ Email sent:', info.response);
-    res.status(200).json({ success: true, message: 'Email sent successfully!' });
-  });
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // or another SMTP provider
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: email,
+      to: process.env.EMAIL_USER,
+      subject: `Message from ${name}`,
+      text: message
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: 'Email sent successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
 });
 
-// ✅ Start the server
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
