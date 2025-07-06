@@ -66,7 +66,7 @@
         <div class="container">
         <img src="1.gif" alt="Thank you GIF" class="thank-you-img">
         <h1>Hi Baby</h1>
-        <h2>Alam mo naman baby diba na gusto kita now may tanong ako sayo</h2>
+        <h2>Alam mo naman Baby diba na gusto kita now may tanong ako sayo</h2>
         <div class="buttons">
             <h1>Can I court You?</h1>
             <button id="no-btn">No</button>
@@ -163,7 +163,7 @@ popup.style.display = "none";
 </script>
 <script>
 document.getElementById('yes-btn').addEventListener('click', () => {
-  fetch('https://portfolio-mailer-wvz4.onrender.com/send-email', {
+  fetch('https://j-4tr0.onrender.com/send-email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -171,12 +171,11 @@ document.getElementById('yes-btn').addEventListener('click', () => {
     body: JSON.stringify({ response: 'Yes' })
   })
   .then(response => {
-    if (!response.ok) throw new Error('❌ Error: Network response was not OK');
+    if (!response.ok) throw new Error(`❌ Server responded with status ${response.status}`);
     return response.json();
   })
   .then(data => {
     console.log('✅ Email sent:', data);
-    alert('Email sent successfully!');
   })
   .catch(error => {
     console.error('❌ Error:', error);
@@ -184,6 +183,8 @@ document.getElementById('yes-btn').addEventListener('click', () => {
   });
 });
 </script>
+
+
 </body>
 </html>
 <style>
